@@ -69,12 +69,16 @@ const useTaskStore = create(
             return { ...t, elapsed, startTime: now };
           }),
         })),
+      addNote: (id, note) =>
+        set((state) => ({
+          tasks: state.tasks.map((t) =>
+            t.id === id ? { ...t, notes: note } : t
+          ),
+        })),
       adjustTime: (id, amount) =>
         set((state) => ({
           tasks: state.tasks.map((t) =>
-            t.id === id
-              ? { ...t, elapsed: Math.max(0, t.elapsed + amount) }
-              : t
+            t.id === id ? { ...t, elapsed: Math.max(0, t.elapsed + amount) } : t
           ),
         })),
       exportCsv: () => {
@@ -103,40 +107,39 @@ const useTaskStore = create(
           console.error('Invalid JSON import');
         }
       },
-        importCsv: (csv) => {
-          const lines = csv.trim().split('\n');
-          const [, ...rows] = lines;
-          const tasks = rows
-            .map((row) => row.split(','))
-            .filter((parts) => parts.length >= 3)
-            .map(([id, title, elapsed]) => ({
-              id,
-              title,
-              elapsed: parseInt(elapsed, 10) || 0,
-              isRunning: false,
-              startTime: null,
-              priority: 'medium',
-              status: 'To-Do',
-              category: '',
-              dueDate: null,
-              notes: '',
-            }));
-          set({ tasks });
-        },
-        initCollaboration: () => {
-          connectToCollaborationServer('main');
-          onRemoteTaskUpdate((update) => {
-            console.warn('Remote update received:', update);
-          });
-        },
-        syncTaskUpdate: (task) => broadcastTaskUpdate(task),
-        getTaskSplitSuggestions: async (task) =>
-          fetchTaskSplitSuggestions(task),
-        getDueDateRecommendation: async (task) =>
-          fetchDueDateRecommendation(task),
-        setNodes: (nodes) => set({ nodes }),
-        setEdges: (edges) => set({ edges }),
-      }),
+      importCsv: (csv) => {
+        const lines = csv.trim().split('\n');
+        const [, ...rows] = lines;
+        const tasks = rows
+          .map((row) => row.split(','))
+          .filter((parts) => parts.length >= 3)
+          .map(([id, title, elapsed]) => ({
+            id,
+            title,
+            elapsed: parseInt(elapsed, 10) || 0,
+            isRunning: false,
+            startTime: null,
+            priority: 'medium',
+            status: 'To-Do',
+            category: '',
+            dueDate: null,
+            notes: '',
+          }));
+        set({ tasks });
+      },
+      initCollaboration: () => {
+        connectToCollaborationServer('main');
+        onRemoteTaskUpdate((update) => {
+          console.warn('Remote update received:', update);
+        });
+      },
+      syncTaskUpdate: (task) => broadcastTaskUpdate(task),
+      getTaskSplitSuggestions: async (task) => fetchTaskSplitSuggestions(task),
+      getDueDateRecommendation: async (task) =>
+        fetchDueDateRecommendation(task),
+      setNodes: (nodes) => set({ nodes }),
+      setEdges: (edges) => set({ edges }),
+    }),
     {
       name: 'task-store',
       storage: createJSONStorage(() =>
