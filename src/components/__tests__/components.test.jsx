@@ -10,7 +10,7 @@ import useTaskStore from '../../store.js';
 
 describe('UI components', () => {
   afterEach(() => {
-    useTaskStore.setState({ tasks: [] });
+    useTaskStore.setState({ tasks: [], nodes: [], edges: [] });
     cleanup();
   });
   test('MindMap renders heading', () => {
@@ -34,9 +34,21 @@ describe('UI components', () => {
   });
 
   test('Toolbar renders buttons', () => {
-    render(<Toolbar onAdd={() => {}} onExport={() => {}} onSwitch={() => {}} />);
+    render(
+      <Toolbar
+        onAdd={() => {}}
+        onExportCsv={() => {}}
+        onExportJson={() => {}}
+        onImportJson={() => {}}
+        onImportCsv={() => {}}
+        onSwitch={() => {}}
+      />
+    );
     expect(screen.getByText('Add Task')).toBeInTheDocument();
-    expect(screen.getByText('Download Data')).toBeInTheDocument();
+    expect(screen.getByText('Export CSV')).toBeInTheDocument();
+    expect(screen.getByText('Export JSON')).toBeInTheDocument();
+    expect(screen.getByText('Import JSON')).toBeInTheDocument();
+    expect(screen.getByText('Import CSV')).toBeInTheDocument();
     expect(screen.getByText('Switch View')).toBeInTheDocument();
   });
 
