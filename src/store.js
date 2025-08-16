@@ -6,6 +6,8 @@ const useTaskStore = create(
   persist(
     (set, get) => ({
       tasks: [],
+      nodes: [],
+      edges: [],
       addTask: (title, id, attrs = {}) =>
         set((state) => {
           const taskId = id || Date.now().toString();
@@ -16,13 +18,14 @@ const useTaskStore = create(
               {
                 id: taskId,
                 title,
-                elapsed: 0,
+                elapsed: attrs.elapsed || 0,
                 isRunning: false,
                 startTime: null,
                 priority: attrs.priority || 'medium',
                 status: attrs.status || 'To-Do',
                 category: attrs.category || '',
                 dueDate: attrs.dueDate || null,
+                notes: attrs.notes || '',
               },
             ],
           };
@@ -65,13 +68,54 @@ const useTaskStore = create(
               : t
           ),
         })),
-      exportData: () => {
+      exportCsv: () => {
         const header = 'id,title,elapsed_ms';
         const rows = get().tasks.map(
           (t) => `${t.id},${t.title.replace(/,/g, '')},${t.elapsed}`
         );
         return [header, ...rows].join('\n');
       },
+      exportData: () => get().exportCsv(),
+      exportJson: () =>
+        JSON.stringify({
+          tasks: get().tasks,
+          nodes: get().nodes,
+          edges: get().edges,
+        }),
+      importJson: (json) => {
+        try {
+          const data = JSON.parse(json);
+          set({
+            tasks: data.tasks || [],
+            nodes: data.nodes || [],
+            edges: data.edges || [],
+          });
+        } catch (e) {
+          console.error('Invalid JSON import');
+        }
+      },
+      importCsv: (csv) => {
+        const lines = csv.trim().split('\n');
+        const [, ...rows] = lines;
+        const tasks = rows
+          .map((row) => row.split(','))
+          .filter((parts) => parts.length >= 3)
+          .map(([id, title, elapsed]) => ({
+            id,
+            title,
+            elapsed: parseInt(elapsed, 10) || 0,
+            isRunning: false,
+            startTime: null,
+            priority: 'medium',
+            status: 'To-Do',
+            category: '',
+            dueDate: null,
+            notes: '',
+          }));
+        set({ tasks });
+      },
+      setNodes: (nodes) => set({ nodes }),
+      setEdges: (edges) => set({ edges }),
     }),
     {
       name: 'task-store',

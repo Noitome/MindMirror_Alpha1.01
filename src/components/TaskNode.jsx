@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import Timer from './Timer.jsx';
 import useTaskStore from '../store.js';
 
@@ -9,19 +10,28 @@ const priorityColors = {
 };
 
 // Displays a task title with timer and editable metadata
-export default function TaskNode({ id, title = 'New Task' }) {
+export default function TaskNode({ id, title = 'New Task', showNotes = false }) {
   const addTask = useTaskStore((s) => s.addTask);
   const updateTask = useTaskStore((s) => s.updateTask);
   const taskId = useRef(id || Date.now().toString());
   const task = useTaskStore((s) => s.tasks.find((t) => t.id === taskId.current));
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   // ensure task exists in the store
   useEffect(() => {
     addTask(title, taskId.current);
   }, [addTask, title]);
 
-  const t = task || { title, priority: 'medium', status: 'To-Do', category: '', dueDate: '' };
+  const t =
+    task || {
+      title,
+      priority: 'medium',
+      status: 'To-Do',
+      category: '',
+      dueDate: '',
+      notes: '',
+    };
 
   return (
     <div
@@ -35,6 +45,20 @@ export default function TaskNode({ id, title = 'New Task' }) {
         {t.dueDate && <span> | {new Date(t.dueDate).toLocaleDateString()}</span>}
       </div>
       <Timer taskId={taskId.current} />
+      {showNotes && t.notes && (
+        <div className="task-notes">
+          <ReactMarkdown>
+            {expanded || t.notes.length <= 100
+              ? t.notes
+              : `${t.notes.slice(0, 100)}...`}
+          </ReactMarkdown>
+          {t.notes.length > 100 && (
+            <button onClick={() => setExpanded((e) => !e)}>
+              {expanded ? 'Collapse' : 'Expand'}
+            </button>
+          )}
+        </div>
+      )}
       {open && (
         <div className="modal">
           <form
@@ -47,6 +71,7 @@ export default function TaskNode({ id, title = 'New Task' }) {
                 status: form.status.value,
                 category: form.category.value,
                 dueDate: form.dueDate.value,
+                notes: form.notes.value,
               });
               setOpen(false);
             }}
@@ -78,6 +103,10 @@ export default function TaskNode({ id, title = 'New Task' }) {
             <label>
               Due Date
               <input type="date" name="dueDate" defaultValue={t.dueDate?.slice(0, 10)} />
+            </label>
+            <label>
+              Notes
+              <textarea name="notes" defaultValue={t.notes} />
             </label>
             <button type="submit">Save</button>
             <button type="button" onClick={() => setOpen(false)}>

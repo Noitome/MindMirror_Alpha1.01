@@ -32,7 +32,7 @@ export default function ListView() {
       </label>
       <div>
         {sorted.map((t) => (
-          <TaskNode key={t.id} id={t.id} title={t.title} />
+          <TaskNode key={t.id} id={t.id} title={t.title} showNotes />
         ))}
       </div>
     </section>
