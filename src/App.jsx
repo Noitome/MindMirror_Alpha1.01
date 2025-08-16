@@ -3,17 +3,29 @@ import Toolbar from './components/Toolbar.jsx';
 import MindMap from './components/MindMap.jsx';
 import ListView from './components/ListView.jsx';
 import RealityView from './components/RealityView.jsx';
+import useTaskStore from './store.js';
 import './App.css';
 
 export default function App() {
   const [view, setView] = useState('mind');
+  const tasks = useTaskStore((s) => s.tasks);
+  const addTask = useTaskStore((s) => s.addTask);
+  const exportData = useTaskStore((s) => s.exportData);
 
   const handleAdd = () => {
-    alert('Add Task clicked');
+    const title = `Task ${tasks.length + 1}`;
+    addTask(title);
   };
 
   const handleExport = () => {
-    alert('Export CSV clicked');
+    const data = exportData();
+    const blob = new Blob([data], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tasks.csv';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleSwitch = () => {
