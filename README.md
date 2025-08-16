@@ -1,1 +1,2 @@
-# MindMirror_Alpha1.01
+# MindMirror_Alpha_1.0
+ as above
