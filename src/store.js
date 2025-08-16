@@ -6,16 +6,33 @@ const useTaskStore = create(
   persist(
     (set, get) => ({
       tasks: [],
-      addTask: (title, id) => set((state) => {
-        const taskId = id || Date.now().toString();
-        if (state.tasks.find((t) => t.id === taskId)) return state; // avoid duplicates
-        return {
-          tasks: [
-            ...state.tasks,
-            { id: taskId, title, elapsed: 0, isRunning: false, startTime: null },
-          ],
-        };
-      }),
+      addTask: (title, id, attrs = {}) =>
+        set((state) => {
+          const taskId = id || Date.now().toString();
+          if (state.tasks.find((t) => t.id === taskId)) return state; // avoid duplicates
+          return {
+            tasks: [
+              ...state.tasks,
+              {
+                id: taskId,
+                title,
+                elapsed: 0,
+                isRunning: false,
+                startTime: null,
+                priority: attrs.priority || 'medium',
+                status: attrs.status || 'To-Do',
+                category: attrs.category || '',
+                dueDate: attrs.dueDate || null,
+              },
+            ],
+          };
+        }),
+      updateTask: (id, updates) =>
+        set((state) => ({
+          tasks: state.tasks.map((t) =>
+            t.id === id ? { ...t, ...updates } : t
+          ),
+        })),
       startTimer: (id) =>
         set((state) => ({
           tasks: state.tasks.map((t) =>
