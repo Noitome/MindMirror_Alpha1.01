@@ -1,0 +1,30 @@
+name: python-tracker
+
+on:
+  push:
+    paths:
+      - 'tracker/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    if: ${{ hashFiles('tracker/**') != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f tracker/requirements.txt ]; then pip install -r tracker/requirements.txt; fi
+          pip install pyinstaller
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller tracker/main.py --onefile --name MindMirrorTracker
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mindmirror-tracker
+          path: dist/MindMirrorTracker
