@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { describe, expect, test, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
@@ -15,22 +16,30 @@ describe('UI components', () => {
   });
   test('MindMap renders heading', () => {
     render(<MindMap />);
-    expect(screen.getByRole('heading', { name: /mind map/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /mind map/i })
+    ).toBeInTheDocument();
   });
 
   test('ListView renders heading', () => {
     render(<ListView />);
-    expect(screen.getByRole('heading', { name: /task list/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /task list/i })
+    ).toBeInTheDocument();
   });
 
   test('RealityView renders heading', () => {
     render(<RealityView />);
-    expect(screen.getByRole('heading', { name: /reality view/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /reality view/i })
+    ).toBeInTheDocument();
   });
 
   test('TaskNode renders title', () => {
     render(<TaskNode title="Example" />);
-    expect(screen.getAllByRole('heading', { name: /example/i })[0]).toBeInTheDocument();
+    expect(
+      screen.getAllByRole('heading', { name: /example/i })[0]
+    ).toBeInTheDocument();
   });
 
   test('Toolbar renders buttons', () => {
