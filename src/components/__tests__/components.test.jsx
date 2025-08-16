@@ -1,4 +1,4 @@
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { describe, expect, test, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import MindMap from '../MindMap.jsx';
@@ -6,9 +6,13 @@ import ListView from '../ListView.jsx';
 import RealityView from '../RealityView.jsx';
 import TaskNode from '../TaskNode.jsx';
 import Toolbar from '../Toolbar.jsx';
+import useTaskStore from '../../store.js';
 
 describe('UI components', () => {
-  afterEach(() => cleanup());
+  afterEach(() => {
+    useTaskStore.setState({ tasks: [] });
+    cleanup();
+  });
   test('MindMap renders heading', () => {
     render(<MindMap />);
     expect(screen.getByRole('heading', { name: /mind map/i })).toBeInTheDocument();
@@ -34,5 +38,17 @@ describe('UI components', () => {
     expect(screen.getByText('Add Task')).toBeInTheDocument();
     expect(screen.getByText('Download Data')).toBeInTheDocument();
     expect(screen.getByText('Switch View')).toBeInTheDocument();
+  });
+
+  test('ListView sorts by priority', () => {
+    const addTask = useTaskStore.getState().addTask;
+    addTask('Low', '1', { priority: 'low' });
+    addTask('High', '2', { priority: 'high' });
+    render(<ListView />);
+    fireEvent.change(screen.getByLabelText(/sort by/i), {
+      target: { value: 'priority' },
+    });
+    const headings = screen.getAllByRole('heading', { level: 3 });
+    expect(headings[0]).toHaveTextContent('High');
   });
 });
