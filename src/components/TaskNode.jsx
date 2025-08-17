@@ -1,27 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import Timer from './Timer.jsx';
+import TimePie from './TimePie.jsx';
 import useTaskStore from '../store.js';
-
-const priorityColors = {
-  high: 'salmon',
-  medium: 'orange',
-  low: 'lightgreen',
-};
+import { priorityColors } from '../colors.js';
 
 // Displays a task title with timer and editable metadata
-export default function TaskNode({ id, title = 'New Task', showNotes = false }) {
+export default function TaskNode({
+  id,
+  title = 'New Task',
+  showNotes = false,
+  parentId = null,
+}) {
   const addTask = useTaskStore((s) => s.addTask);
   const updateTask = useTaskStore((s) => s.updateTask);
+  const tasks = useTaskStore((s) => s.tasks);
   const taskId = useRef(id || Date.now().toString());
-  const task = useTaskStore((s) => s.tasks.find((t) => t.id === taskId.current));
+  const task = tasks.find((t) => t.id === taskId.current);
+  const hasChildren = tasks.some((t) => t.parentId === taskId.current);
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
   // ensure task exists in the store
   useEffect(() => {
-    addTask(title, taskId.current);
-  }, [addTask, title]);
+    addTask(title, taskId.current, { parentId });
+  }, [addTask, title, parentId]);
 
   const t =
     task || {
@@ -45,6 +48,7 @@ export default function TaskNode({ id, title = 'New Task', showNotes = false }) 
         {t.dueDate && <span> | {new Date(t.dueDate).toLocaleDateString()}</span>}
       </div>
       <Timer taskId={taskId.current} />
+      {hasChildren && <TimePie taskId={taskId.current} />}
       {showNotes && t.notes && (
         <div className="task-notes">
           <ReactMarkdown>

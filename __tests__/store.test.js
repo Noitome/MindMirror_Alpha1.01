@@ -30,4 +30,50 @@ describe('task store', () => {
     const t = useTaskStore.getState().tasks[0];
     expect(t.notes).toBe('Remember this');
   });
+
+  test('subtask time adds to parent', () => {
+    const store = useTaskStore.getState();
+    store.addTask('Parent', 'p');
+    store.addTask('Child', 'c', { parentId: 'p' });
+    store.adjustTime('c', 60000);
+    const parent = useTaskStore
+      .getState()
+      .tasks.find((t) => t.id === 'p');
+    const child = useTaskStore
+      .getState()
+      .tasks.find((t) => t.id === 'c');
+    expect(child.elapsed).toBe(60000);
+    expect(parent.elapsed).toBe(60000);
+  });
+
+  test('parent timer requires note to save', () => {
+    const store = useTaskStore.getState();
+    store.addTask('Parent', 'p');
+    store.addTask('Child', 'c', { parentId: 'p' });
+    store.startTimer('p');
+    const start = Date.now() - 60000;
+    useTaskStore.setState((s) => ({
+      tasks: s.tasks.map((t) =>
+        t.id === 'p' ? { ...t, startTime: start } : t
+      ),
+    }));
+    store.stopTimer('p');
+    let parent = useTaskStore
+      .getState()
+      .tasks.find((t) => t.id === 'p');
+    expect(parent.elapsed).toBe(0);
+    store.updateTask('p', { notes: 'summary' });
+    store.startTimer('p');
+    const start2 = Date.now() - 60000;
+    useTaskStore.setState((s) => ({
+      tasks: s.tasks.map((t) =>
+        t.id === 'p' ? { ...t, startTime: start2 } : t
+      ),
+    }));
+    store.stopTimer('p');
+    parent = useTaskStore
+      .getState()
+      .tasks.find((t) => t.id === 'p');
+    expect(parent.elapsed).toBeGreaterThanOrEqual(60000);
+  });
 });

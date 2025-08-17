@@ -35,6 +35,7 @@ const useTaskStore = create(
                 category: attrs.category || '',
                 dueDate: attrs.dueDate || null,
                 notes: attrs.notes || '',
+                parentId: attrs.parentId || null,
               },
             ],
           };
@@ -52,14 +53,36 @@ const useTaskStore = create(
           ),
         })),
       stopTimer: (id) =>
-        set((state) => ({
-          tasks: state.tasks.map((t) => {
-            if (t.id !== id) return t;
-            const now = Date.now();
-            const elapsed = t.elapsed + (t.startTime ? now - t.startTime : 0);
-            return { ...t, isRunning: false, elapsed, startTime: null };
-          }),
-        })),
+        set((state) => {
+          const task = state.tasks.find((t) => t.id === id);
+          if (!task) return state;
+          const now = Date.now();
+          const added = task.startTime ? now - task.startTime : 0;
+          const hasChildren = state.tasks.some((t) => t.parentId === id);
+          if (hasChildren && !task.notes) {
+            return {
+              tasks: state.tasks.map((t) =>
+                t.id === id ? { ...t, isRunning: false, startTime: null } : t
+              ),
+            };
+          }
+          return {
+            tasks: state.tasks.map((t) => {
+              if (t.id === id) {
+                return {
+                  ...t,
+                  isRunning: false,
+                  elapsed: t.elapsed + added,
+                  startTime: null,
+                };
+              }
+              if (t.id === task.parentId) {
+                return { ...t, elapsed: t.elapsed + added };
+              }
+              return t;
+            }),
+          };
+        }),
       updateRunningTime: (id) =>
         set((state) => ({
           tasks: state.tasks.map((t) => {
@@ -76,11 +99,27 @@ const useTaskStore = create(
           ),
         })),
       adjustTime: (id, amount) =>
-        set((state) => ({
-          tasks: state.tasks.map((t) =>
-            t.id === id ? { ...t, elapsed: Math.max(0, t.elapsed + amount) } : t
-          ),
-        })),
+        set((state) => {
+          const task = state.tasks.find((t) => t.id === id);
+          if (!task) return state;
+          return {
+            tasks: state.tasks.map((t) => {
+              if (t.id === id) {
+                return {
+                  ...t,
+                  elapsed: Math.max(0, t.elapsed + amount),
+                };
+              }
+              if (t.id === task.parentId) {
+                return {
+                  ...t,
+                  elapsed: Math.max(0, t.elapsed + amount),
+                };
+              }
+              return t;
+            }),
+          };
+        }),
       exportCsv: () => {
         const header = 'id,title,elapsed_ms';
         const rows = get().tasks.map(

@@ -7,6 +7,7 @@ import ListView from '../ListView.jsx';
 import RealityView from '../RealityView.jsx';
 import TaskNode from '../TaskNode.jsx';
 import Toolbar from '../Toolbar.jsx';
+import TimePie from '../TimePie.jsx';
 import useTaskStore from '../../store.js';
 
 describe('UI components', () => {
@@ -71,5 +72,16 @@ describe('UI components', () => {
     });
     const headings = screen.getAllByRole('heading', { level: 3 });
     expect(headings[0]).toHaveTextContent('High');
+  });
+
+  test('TimePie renders pie chart with child times', () => {
+    const addTask = useTaskStore.getState().addTask;
+    addTask('Parent', 'p', { elapsed: 180000 });
+    addTask('Child1', 'c1', { parentId: 'p', elapsed: 60000, priority: 'high' });
+    addTask('Child2', 'c2', { parentId: 'p', elapsed: 60000, priority: 'low' });
+    render(<TimePie taskId="p" />);
+    const pie = screen.getByTestId('time-pie');
+    expect(pie).toBeInTheDocument();
+    expect(pie.style.background).toContain('conic-gradient');
   });
 });
